@@ -94,23 +94,23 @@ install_neovim() {
 # ─── Install LazyVim ─────────────────────────────────────────
 install_lazyvim() {
     if [ -d "$HOME/.config/nvim/lua/plugins" ]; then
-        warn "Neovim config already exists, skipping LazyVim"
-        return
+        warn "Neovim config already exists, skipping LazyVim clone"
+    else
+        info "Installing LazyVim..."
+
+        # Backup existing config
+        for dir in ~/.config/nvim ~/.local/share/nvim ~/.local/state/nvim ~/.cache/nvim; do
+            [ -d "$dir" ] && mv "$dir" "${dir}.bak.$(date +%s)"
+        done
+
+        git clone https://github.com/LazyVim/starter ~/.config/nvim
+        rm -rf ~/.config/nvim/.git
     fi
 
-    info "Installing LazyVim..."
-
-    # Backup existing config
-    for dir in ~/.config/nvim ~/.local/share/nvim ~/.local/state/nvim ~/.cache/nvim; do
-        [ -d "$dir" ] && mv "$dir" "${dir}.bak.$(date +%s)"
-    done
-
-    git clone https://github.com/LazyVim/starter ~/.config/nvim
-    rm -rf ~/.config/nvim/.git
-
-    # Copy custom LazyVim plugin configs if they exist
+    # Copy custom LazyVim configs (always, so updates are applied)
     if [ -d "$DOTFILES_DIR/nvim/lua" ]; then
         cp -r "$DOTFILES_DIR/nvim/lua/"* ~/.config/nvim/lua/
+        ok "Custom LazyVim configs applied"
     fi
 
     ok "LazyVim installed"
