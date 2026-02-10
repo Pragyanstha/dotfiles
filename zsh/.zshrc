@@ -14,7 +14,7 @@ source "$HOME/.zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh" 2>/dev/n
 # ─── Tools ────────────────────────────────────────
 eval "$(starship init zsh)"
 eval "$(zoxide init zsh)"
-source <(fzf --zsh) 2>/dev/null
+source <(fzf --zsh 2>/dev/null) 2>/dev/null
 
 # ─── Aliases ──────────────────────────────────────
 alias ls="eza --icons"
