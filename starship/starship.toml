@@ -1,0 +1,37 @@
+# Clean, minimal prompt
+format = """
+$directory\
+$git_branch\
+$git_status\
+$character"""
+
+# Disable all the cloud noise
+[aws]
+disabled = true
+
+[gcloud]
+disabled = true
+
+[kubernetes]
+disabled = true
+
+[docker_context]
+disabled = true
+
+# Directory
+[directory]
+truncation_length = 3
+truncate_to_repo = true
+
+# Git
+[git_branch]
+format = " [$branch]($style) "
+style = "bold purple"
+
+[git_status]
+format = '([$all_status$ahead_behind]($style) )'
+
+# Prompt character
+[character]
+success_symbol = "[❯](bold green)"
+error_symbol = "[❯](bold red)"
