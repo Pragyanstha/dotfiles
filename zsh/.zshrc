@@ -25,6 +25,27 @@ alias lg="lazygit"
 alias c="clear"
 alias cc="claude"
 alias sr="sshr"
+alias n="neovim"
+
+# Navigation
+alias ..="cd .."
+alias ...="cd ../.."
+
+# Tree view
+alias tree="eza --tree --icons"
+
+# Git
+alias gs="git status"
+alias ga="git add"
+alias gc="git commit"
+alias gp="git push"
+alias gl="git log --oneline --graph"
+alias gd="git diff"
+
+# Utilities
+alias mk="mkdir -p"
+alias ports="lsof -i -P -n | grep LISTEN"
+alias ip="curl -s ifconfig.me"
 
 # ─── SSH Pane Reconnect ──────────────────────────
 mkdir -p "$HOME/.local/state"
