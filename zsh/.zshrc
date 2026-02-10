@@ -25,7 +25,7 @@ alias lg="lazygit"
 alias c="clear"
 alias cc="claude"
 alias sr="sshr"
-alias n="neovim"
+alias n="nvim"
 
 # Navigation
 alias ..="cd .."
