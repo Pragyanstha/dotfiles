@@ -1,5 +1,7 @@
 # Dotfiles
 
+Pragyan's dotfiles
+
 Terminal setup: Ghostty + Neovim (LazyVim) + Claude Code + lazygit + Starship
 
 ## Quick Install
