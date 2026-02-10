@@ -24,17 +24,25 @@ alias vim="nvim"
 alias lg="lazygit"
 alias c="clear"
 alias cc="claude"
+alias sr="sshr"
 
 # ─── SSH Pane Reconnect ──────────────────────────
+mkdir -p "$HOME/.local/state"
+
+# Track CWD so new SSH panes land in the same directory
+_save_cwd() { echo "$PWD" > "$HOME/.local/state/last_dir"; }
+chpwd_functions+=(_save_cwd)
+_save_cwd
+
 ssh() {
-  mkdir -p "$HOME/.local/state"
   echo "$@" > "$HOME/.local/state/ssh_target"
   command ssh "$@"
 }
 
 sshr() {
   if [[ -f "$HOME/.local/state/ssh_target" ]]; then
-    command ssh $(cat "$HOME/.local/state/ssh_target")
+    command ssh -t $(cat "$HOME/.local/state/ssh_target") \
+      'cd $(cat ~/.local/state/last_dir 2>/dev/null || echo ~) && exec $SHELL -l'
   else
     echo "No SSH session saved"
   fi
