@@ -36,7 +36,7 @@ _save_cwd
 
 ssh() {
   echo "$@" > "$HOME/.local/state/ssh_target"
-  command ssh "$@"
+  TERM=xterm-256color command ssh "$@"
 }
 
 sshr() {
