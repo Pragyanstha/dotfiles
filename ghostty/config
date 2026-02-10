@@ -1,7 +1,7 @@
 # ─── Ghostty Config ───────────────────────────────────────────
 
 # Theme
-theme = catppuccin-mocha
+theme = Catppuccin Mocha
 
 # Font
 font-family = JetBrainsMono Nerd Font
@@ -25,6 +25,15 @@ keybind = super+ctrl+h=resize_split:left,40
 keybind = super+ctrl+j=resize_split:down,40
 keybind = super+ctrl+k=resize_split:up,40
 keybind = super+ctrl+l=resize_split:right,40
+
+# Window
+macos-titlebar-style = "transparent"
+window-padding-balance = true
+window-padding-x = 0
+window-padding-y = 0
+window-theme = "ghostty"
+background-blur-radius = 20
+background-opacity = 0.65
 
 # Equalize splits
 keybind = super+equal=equalize_splits
