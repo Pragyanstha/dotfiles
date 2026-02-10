@@ -24,3 +24,23 @@ alias vim="nvim"
 alias lg="lazygit"
 alias c="clear"
 alias cc="claude"
+
+# ─── SSH Pane Reconnect ──────────────────────────
+ssh() {
+  mkdir -p "$HOME/.local/state"
+  echo "$@" > "$HOME/.local/state/ssh_target"
+  command ssh "$@"
+}
+
+sshr() {
+  if [[ -f "$HOME/.local/state/ssh_target" ]]; then
+    command ssh $(cat "$HOME/.local/state/ssh_target")
+  else
+    echo "No SSH session saved"
+  fi
+}
+
+# Hint on new shell if there's a saved SSH target
+if [[ -f "$HOME/.local/state/ssh_target" ]]; then
+  printf "\033[2mSSH: %s — type 'sshr' to reconnect\033[0m\n" "$(cat "$HOME/.local/state/ssh_target")"
+fi
