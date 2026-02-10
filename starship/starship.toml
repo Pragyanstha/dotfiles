@@ -1,5 +1,7 @@
 # Clean, minimal prompt
 format = """
+$username\
+$hostname\
 $directory\
 $git_branch\
 $git_status\
@@ -30,6 +32,19 @@ style = "bold purple"
 
 [git_status]
 format = '([$all_status$ahead_behind]($style) )'
+
+# Username — shown on SSH or as root
+[username]
+show_always = false
+format = "[$user]($style)@"
+style_user = "bold yellow"
+style_root = "bold red"
+
+# Hostname — shown on SSH
+[hostname]
+ssh_only = true
+format = "[$hostname]($style) "
+style = "bold blue"
 
 # Prompt character
 [character]
