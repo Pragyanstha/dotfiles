@@ -15,24 +15,22 @@ err()   { echo -e "${RED}[ERR]${NC} $1"; }
 
 DOTFILES_DIR="$(cd "$(dirname "$0")" && pwd)"
 
+LOCAL_BIN="$HOME/.local/bin"
+mkdir -p "$LOCAL_BIN"
+export PATH="$LOCAL_BIN:$PATH"
+
 # ─── Detect OS ────────────────────────────────────────────────
 detect_os() {
     if [[ "$OSTYPE" == "darwin"* ]]; then
         OS="macos"
-        PKG="brew install"
     elif command -v apt-get &>/dev/null; then
         OS="debian"
-        PKG="sudo apt-get install -y"
-        sudo apt-get update -qq
     elif command -v dnf &>/dev/null; then
         OS="fedora"
-        PKG="sudo dnf install -y"
     elif command -v pacman &>/dev/null; then
         OS="arch"
-        PKG="sudo pacman -S --noconfirm"
     elif command -v apk &>/dev/null; then
         OS="alpine"
-        PKG="sudo apk add"
     else
         err "Unsupported OS"
         exit 1
@@ -40,30 +38,34 @@ detect_os() {
     ok "Detected OS: $OS"
 }
 
-# ─── Install core tools ──────────────────────────────────────
-install_packages() {
-    info "Installing core packages..."
+# ─── Check prerequisites ─────────────────────────────────────
+check_prerequisites() {
+    if [[ "$OS" == "macos" ]]; then
+        info "Installing packages via Homebrew..."
+        brew install neovim lazygit zsh starship eza bat zoxide fzf \
+                     zsh-syntax-highlighting zsh-autosuggestions \
+                     git curl wget ripgrep fd
+        ok "Packages installed via Homebrew"
+        return
+    fi
 
-    case $OS in
-        macos)
-            brew install neovim lazygit zsh starship eza bat zoxide fzf \
-                         zsh-syntax-highlighting zsh-autosuggestions \
-                         git curl wget ripgrep fd
-            ;;
-        debian)
-            $PKG git curl wget unzip zsh ripgrep fd-find tar gzip
-            ;;
-        fedora)
-            $PKG git curl wget unzip zsh ripgrep fd-find tar gzip
-            ;;
-        arch)
-            $PKG git curl wget unzip zsh ripgrep fd tar gzip
-            ;;
-        alpine)
-            $PKG git curl wget unzip zsh ripgrep fd tar gzip bash
-            ;;
-    esac
-    ok "Core packages installed"
+    info "Checking prerequisites..."
+    local missing=()
+    for cmd in git curl wget zsh tar gzip unzip; do
+        if ! command -v "$cmd" &>/dev/null; then
+            missing+=("$cmd")
+        fi
+    done
+
+    if [ ${#missing[@]} -gt 0 ]; then
+        warn "Missing prerequisites: ${missing[*]}"
+        warn "Install them with your system package manager, e.g.:"
+        warn "  sudo apt-get install -y ${missing[*]}"
+        warn "  sudo dnf install -y ${missing[*]}"
+        warn "  sudo pacman -S ${missing[*]}"
+    else
+        ok "All prerequisites found"
+    fi
 }
 
 # ─── Install Neovim (latest) ─────────────────────────────────
@@ -76,20 +78,14 @@ install_neovim() {
     info "Installing Neovim..."
     case $OS in
         macos)
-            brew install neovim
+            # Already installed via Homebrew in check_prerequisites
             ;;
-        debian|fedora)
-            # Get latest stable appimage
+        *)
             curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz
-            sudo tar -xzf nvim-linux-x86_64.tar.gz -C /opt/
-            sudo ln -sf /opt/nvim-linux-x86_64/bin/nvim /usr/local/bin/nvim
+            mkdir -p "$HOME/.local/nvim"
+            tar -xzf nvim-linux-x86_64.tar.gz -C "$HOME/.local/" --strip-components=0
+            ln -sf "$HOME/.local/nvim-linux-x86_64/bin/nvim" "$LOCAL_BIN/nvim"
             rm -f nvim-linux-x86_64.tar.gz
-            ;;
-        arch)
-            sudo pacman -S --noconfirm neovim
-            ;;
-        alpine)
-            sudo apk add neovim
             ;;
     esac
     ok "Neovim installed"
@@ -130,13 +126,13 @@ install_lazygit() {
     info "Installing lazygit..."
     case $OS in
         macos)
-            brew install lazygit
+            # Already installed via Homebrew in check_prerequisites
             ;;
         *)
             LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*' 2>/dev/null || echo "0.44.1")
             curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz"
             tar xf lazygit.tar.gz lazygit
-            sudo install lazygit /usr/local/bin
+            install lazygit "$LOCAL_BIN/"
             rm -f lazygit lazygit.tar.gz
             ;;
     esac
@@ -153,10 +149,10 @@ install_starship() {
     info "Installing Starship..."
     case $OS in
         macos)
-            brew install starship
+            # Already installed via Homebrew in check_prerequisites
             ;;
         *)
-            curl -sS https://starship.rs/install.sh | sh -s -- -y
+            curl -sS https://starship.rs/install.sh | sh -s -- -y -b "$LOCAL_BIN"
             ;;
     esac
     ok "Starship installed"
@@ -167,33 +163,47 @@ install_modern_tools() {
     info "Installing modern CLI tools (eza, bat, zoxide, fzf)..."
     case $OS in
         macos)
-            # Already installed in install_packages
-            ;;
-        debian)
-            # eza
-            if ! command -v eza &>/dev/null; then
-                sudo mkdir -p /etc/apt/keyrings
-                wget -qO- https://raw.githubusercontent.com/eza-community/eza/main/deb.asc | sudo gpg --dearmor -o /etc/apt/keyrings/gierens.gpg 2>/dev/null || true
-                echo "deb [signed-by=/etc/apt/keyrings/gierens.gpg] http://deb.gierens.de stable main" | sudo tee /etc/apt/sources.list.d/gierens.list > /dev/null
-                sudo apt-get update -qq && sudo apt-get install -y eza 2>/dev/null || warn "eza install failed, skipping"
-            fi
-            # bat
-            $PKG bat 2>/dev/null || true
-            # fzf
-            $PKG fzf 2>/dev/null || true
-            # zoxide
-            if ! command -v zoxide &>/dev/null; then
-                curl -sSfL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | sh 2>/dev/null || warn "zoxide install failed"
-            fi
-            ;;
-        fedora)
-            sudo dnf install -y eza bat fzf zoxide 2>/dev/null || warn "Some tools failed to install"
-            ;;
-        arch)
-            sudo pacman -S --noconfirm eza bat fzf zoxide 2>/dev/null || warn "Some tools failed to install"
+            # Already installed via Homebrew in check_prerequisites
             ;;
         *)
-            warn "Skipping modern tools on $OS — install manually if needed"
+            # eza
+            if ! command -v eza &>/dev/null; then
+                info "Installing eza..."
+                EZA_VERSION=$(curl -s "https://api.github.com/repos/eza-community/eza/releases/latest" | grep -Po '"tag_name": "v\K[^"]*' 2>/dev/null || echo "0.20.13")
+                curl -Lo eza.tar.gz "https://github.com/eza-community/eza/releases/latest/download/eza_x86_64-unknown-linux-gnu.tar.gz" 2>/dev/null \
+                    && tar xf eza.tar.gz \
+                    && install eza "$LOCAL_BIN/" \
+                    && rm -f eza eza.tar.gz \
+                    || warn "eza install failed, skipping"
+            fi
+
+            # bat
+            if ! command -v bat &>/dev/null; then
+                info "Installing bat..."
+                BAT_VERSION=$(curl -s "https://api.github.com/repos/sharkdp/bat/releases/latest" | grep -Po '"tag_name": "v\K[^"]*' 2>/dev/null || echo "0.24.0")
+                curl -Lo bat.tar.gz "https://github.com/sharkdp/bat/releases/latest/download/bat-v${BAT_VERSION}-x86_64-unknown-linux-gnu.tar.gz" 2>/dev/null \
+                    && tar xf bat.tar.gz \
+                    && install "bat-v${BAT_VERSION}-x86_64-unknown-linux-gnu/bat" "$LOCAL_BIN/" \
+                    && rm -rf "bat-v${BAT_VERSION}-x86_64-unknown-linux-gnu" bat.tar.gz \
+                    || warn "bat install failed, skipping"
+            fi
+
+            # fzf
+            if ! command -v fzf &>/dev/null; then
+                info "Installing fzf..."
+                FZF_VERSION=$(curl -s "https://api.github.com/repos/junegunn/fzf/releases/latest" | grep -Po '"tag_name": "v\K[^"]*' 2>/dev/null || echo "0.57.0")
+                curl -Lo fzf.tar.gz "https://github.com/junegunn/fzf/releases/latest/download/fzf-${FZF_VERSION}-linux_amd64.tar.gz" 2>/dev/null \
+                    && tar xf fzf.tar.gz \
+                    && install fzf "$LOCAL_BIN/" \
+                    && rm -f fzf fzf.tar.gz \
+                    || warn "fzf install failed, skipping"
+            fi
+
+            # zoxide
+            if ! command -v zoxide &>/dev/null; then
+                info "Installing zoxide..."
+                curl -sSfL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | sh 2>/dev/null || warn "zoxide install failed"
+            fi
             ;;
     esac
     ok "Modern CLI tools done"
@@ -251,21 +261,19 @@ link_dotfiles() {
 
 # ─── Set zsh as default shell ─────────────────────────────────
 set_default_shell() {
-    if [ "$SHELL" = "$(which zsh)" ]; then
+    if [ "$SHELL" = "$(which zsh 2>/dev/null)" ]; then
         ok "zsh is already default shell"
         return
     fi
 
-    info "Setting zsh as default shell..."
-    ZSH_PATH=$(which zsh)
-
-    # Add to /etc/shells if not present
-    if ! grep -q "$ZSH_PATH" /etc/shells 2>/dev/null; then
-        echo "$ZSH_PATH" | sudo tee -a /etc/shells > /dev/null
+    if ! command -v zsh &>/dev/null; then
+        warn "zsh not found — install it first, then set as default shell"
+        return
     fi
 
-    chsh -s "$ZSH_PATH" 2>/dev/null || warn "Could not change shell. Run: chsh -s $ZSH_PATH"
-    ok "Default shell set to zsh (re-login to apply)"
+    ZSH_PATH=$(which zsh)
+    warn "To set zsh as your default shell, run:"
+    warn "  sudo chsh -s $ZSH_PATH $USER"
 }
 
 # ─── Main ─────────────────────────────────────────────────────
@@ -277,7 +285,7 @@ main() {
     echo ""
 
     detect_os
-    install_packages
+    check_prerequisites
     install_neovim
     install_lazyvim
     install_lazygit
