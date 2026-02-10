@@ -41,7 +41,7 @@ ssh() {
 
 sshr() {
   if [[ -f "$HOME/.local/state/ssh_target" ]]; then
-    command ssh -t $(cat "$HOME/.local/state/ssh_target") \
+    TERM=xterm-256color command ssh -t $(<"$HOME/.local/state/ssh_target") \
       'cd $(cat ~/.local/state/last_dir 2>/dev/null || echo ~) && exec $SHELL -l'
   else
     echo "No SSH session saved"
