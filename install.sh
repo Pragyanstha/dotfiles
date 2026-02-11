@@ -19,7 +19,7 @@ LOCAL_BIN="$HOME/.local/bin"
 mkdir -p "$LOCAL_BIN"
 export PATH="$LOCAL_BIN:$PATH"
 
-# ─── Detect OS ────────────────────────────────────────────────
+# ─── Detect OS & Architecture ─────────────────────────────────
 detect_os() {
     if [[ "$OSTYPE" == "darwin"* ]]; then
         OS="macos"
@@ -35,14 +35,24 @@ detect_os() {
         err "Unsupported OS"
         exit 1
     fi
-    ok "Detected OS: $OS"
+
+    ARCH="$(uname -m)"
+    case "$ARCH" in
+        x86_64|amd64) ARCH="x86_64" ;;
+        aarch64|arm64) ARCH="aarch64" ;;
+        *)
+            err "Unsupported architecture: $ARCH"
+            exit 1
+            ;;
+    esac
+    ok "Detected OS: $OS ($ARCH)"
 }
 
 # ─── Check prerequisites ─────────────────────────────────────
 check_prerequisites() {
     if [[ "$OS" == "macos" ]]; then
         info "Installing packages via Homebrew..."
-        brew install neovim lazygit zsh starship eza bat zoxide fzf \
+        brew install neovim lazygit tmux zsh starship eza bat zoxide fzf \
                      zsh-syntax-highlighting zsh-autosuggestions \
                      git curl wget ripgrep fd
         ok "Packages installed via Homebrew"
@@ -81,11 +91,13 @@ install_neovim() {
             # Already installed via Homebrew in check_prerequisites
             ;;
         *)
-            curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz
+            local nvim_arch="$ARCH"
+            [[ "$ARCH" == "aarch64" ]] && nvim_arch="arm64"
+            curl -LO "https://github.com/neovim/neovim/releases/latest/download/nvim-linux-${nvim_arch}.tar.gz"
             mkdir -p "$HOME/.local/nvim"
-            tar -xzf nvim-linux-x86_64.tar.gz -C "$HOME/.local/" --strip-components=0
-            ln -sf "$HOME/.local/nvim-linux-x86_64/bin/nvim" "$LOCAL_BIN/nvim"
-            rm -f nvim-linux-x86_64.tar.gz
+            tar -xzf "nvim-linux-${nvim_arch}.tar.gz" -C "$HOME/.local/" --strip-components=0
+            ln -sf "$HOME/.local/nvim-linux-${nvim_arch}/bin/nvim" "$LOCAL_BIN/nvim"
+            rm -f "nvim-linux-${nvim_arch}.tar.gz"
             ;;
     esac
     ok "Neovim installed"
@@ -130,7 +142,8 @@ install_lazygit() {
             ;;
         *)
             LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*' 2>/dev/null || echo "0.44.1")
-            curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz"
+            local lg_arch="x86_64"; [[ "$ARCH" == "aarch64" ]] && lg_arch="arm64"
+            curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_${lg_arch}.tar.gz"
             tar xf lazygit.tar.gz lazygit
             install lazygit "$LOCAL_BIN/"
             rm -f lazygit lazygit.tar.gz
@@ -170,7 +183,8 @@ install_modern_tools() {
             if ! command -v eza &>/dev/null; then
                 info "Installing eza..."
                 EZA_VERSION=$(curl -s "https://api.github.com/repos/eza-community/eza/releases/latest" | grep -Po '"tag_name": "v\K[^"]*' 2>/dev/null || echo "0.20.13")
-                curl -Lo eza.tar.gz "https://github.com/eza-community/eza/releases/latest/download/eza_x86_64-unknown-linux-gnu.tar.gz" 2>/dev/null \
+                local eza_arch="$ARCH"; [[ "$ARCH" == "aarch64" ]] && eza_arch="aarch64"
+                curl -Lo eza.tar.gz "https://github.com/eza-community/eza/releases/latest/download/eza_${eza_arch}-unknown-linux-gnu.tar.gz" 2>/dev/null \
                     && tar xf eza.tar.gz \
                     && install eza "$LOCAL_BIN/" \
                     && rm -f eza eza.tar.gz \
@@ -181,10 +195,11 @@ install_modern_tools() {
             if ! command -v bat &>/dev/null; then
                 info "Installing bat..."
                 BAT_VERSION=$(curl -s "https://api.github.com/repos/sharkdp/bat/releases/latest" | grep -Po '"tag_name": "v\K[^"]*' 2>/dev/null || echo "0.24.0")
-                curl -Lo bat.tar.gz "https://github.com/sharkdp/bat/releases/latest/download/bat-v${BAT_VERSION}-x86_64-unknown-linux-gnu.tar.gz" 2>/dev/null \
+                local bat_arch="$ARCH"; [[ "$ARCH" == "aarch64" ]] && bat_arch="aarch64"
+                curl -Lo bat.tar.gz "https://github.com/sharkdp/bat/releases/latest/download/bat-v${BAT_VERSION}-${bat_arch}-unknown-linux-gnu.tar.gz" 2>/dev/null \
                     && tar xf bat.tar.gz \
-                    && install "bat-v${BAT_VERSION}-x86_64-unknown-linux-gnu/bat" "$LOCAL_BIN/" \
-                    && rm -rf "bat-v${BAT_VERSION}-x86_64-unknown-linux-gnu" bat.tar.gz \
+                    && install "bat-v${BAT_VERSION}-${bat_arch}-unknown-linux-gnu/bat" "$LOCAL_BIN/" \
+                    && rm -rf "bat-v${BAT_VERSION}-${bat_arch}-unknown-linux-gnu" bat.tar.gz \
                     || warn "bat install failed, skipping"
             fi
 
@@ -192,7 +207,8 @@ install_modern_tools() {
             if ! command -v fzf &>/dev/null; then
                 info "Installing fzf..."
                 FZF_VERSION=$(curl -s "https://api.github.com/repos/junegunn/fzf/releases/latest" | grep -Po '"tag_name": "v\K[^"]*' 2>/dev/null || echo "0.57.0")
-                curl -Lo fzf.tar.gz "https://github.com/junegunn/fzf/releases/latest/download/fzf-${FZF_VERSION}-linux_amd64.tar.gz" 2>/dev/null \
+                local fzf_arch="amd64"; [[ "$ARCH" == "aarch64" ]] && fzf_arch="arm64"
+                curl -Lo fzf.tar.gz "https://github.com/junegunn/fzf/releases/latest/download/fzf-${FZF_VERSION}-linux_${fzf_arch}.tar.gz" 2>/dev/null \
                     && tar xf fzf.tar.gz \
                     && install fzf "$LOCAL_BIN/" \
                     && rm -f fzf fzf.tar.gz \
@@ -227,6 +243,26 @@ install_zsh_plugins() {
     ok "zsh plugins installed"
 }
 
+# ─── Install tmux ────────────────────────────────────────────
+install_tmux() {
+    if command -v tmux &>/dev/null; then
+        ok "tmux already installed"
+        return
+    fi
+
+    info "Installing tmux..."
+    case $OS in
+        macos)
+            # Already installed via Homebrew in check_prerequisites
+            ;;
+        debian)  sudo apt-get install -y tmux ;;
+        fedora)  sudo dnf install -y tmux ;;
+        arch)    sudo pacman -S --noconfirm tmux ;;
+        alpine)  sudo apk add tmux ;;
+    esac
+    ok "tmux installed"
+}
+
 # ─── Install Claude Code ─────────────────────────────────────
 install_claude_code() {
     if command -v claude &>/dev/null; then
@@ -237,6 +273,21 @@ install_claude_code() {
     info "Installing Claude Code..."
     curl -fsSL https://claude.ai/install.sh | bash
     ok "Claude Code installed (run 'claude' to authenticate)"
+}
+
+# ─── Install TPM (tmux plugin manager) ──────────────────────
+install_tpm() {
+    if [ -d "$HOME/.tmux/plugins/tpm" ]; then
+        ok "TPM already installed"
+    else
+        info "Installing TPM..."
+        git clone https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
+        ok "TPM installed"
+    fi
+
+    info "Installing tmux plugins via TPM..."
+    "$HOME/.tmux/plugins/tpm/bin/install_plugins" || warn "TPM plugin install failed (tmux may need to be running)"
+    ok "tmux plugins done"
 }
 
 # ─── Symlink dotfiles ────────────────────────────────────────
@@ -255,6 +306,9 @@ link_dotfiles() {
         mkdir -p "$HOME/.config/ghostty"
         ln -sf "$DOTFILES_DIR/ghostty/config" "$HOME/.config/ghostty/config"
     fi
+
+    # tmux
+    ln -sf "$DOTFILES_DIR/.tmux.conf" "$HOME/.tmux.conf"
 
     ok "Dotfiles linked"
 }
@@ -289,6 +343,8 @@ main() {
     install_neovim
     install_lazyvim
     install_lazygit
+    install_tmux
+    install_tpm
     install_starship
     install_modern_tools
     install_zsh_plugins
