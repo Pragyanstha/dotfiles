@@ -2,7 +2,7 @@
 
 Pragyan's dotfiles
 
-Terminal setup: Ghostty + Neovim (LazyVim) + Claude Code + lazygit + Starship
+Terminal setup: Ghostty + Zellij + Neovim (LazyVim) + Claude Code + lazygit + Starship
 
 ## Quick Install
 
@@ -24,6 +24,7 @@ curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/dotfiles/main/install
 
 | Tool | Purpose |
 |------|---------|
+| **Zellij** | Terminal multiplexer (tabs, sessions) |
 | **Neovim + LazyVim** | Preconfigured editor (IDE-like) |
 | **Claude Code** | AI coding assistant in terminal |
 | **lazygit** | Terminal UI for git |
@@ -36,10 +37,11 @@ curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/dotfiles/main/install
 
 ## Key Shortcuts
 
-### Ghostty (macOS only)
-- `Cmd+D` — vertical split
-- `Cmd+Shift+D` — horizontal split
-- `Ctrl+h/j/k/l` — navigate panes (vim-style)
+### Zellij (terminal multiplexer)
+- `Alt+t` — new tab
+- `Alt+w` — close tab
+- `Alt+h/l` — prev/next tab
+- `Alt+1-9` — jump to tab by number
 
 ### LazyVim
 - `Space` — leader key (opens command menu)
@@ -59,16 +61,15 @@ curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/dotfiles/main/install
 - Shell: `zsh/.zshrc`
 - Prompt: `starship/starship.toml`
 - Terminal: `ghostty/config`
+- Multiplexer: `zellij/config.kdl`
 - Neovim: `nvim/lua/plugins/` (add LazyVim plugin specs)
 
 ## Layout
 
 ```
-┌──────────────┬──────────────┐
-│              │              │
-│  Claude Code │   Neovim     │
-│              │              │
-├──────────────┴──────────────┤
-│         Terminal            │
-└─────────────────────────────┘
+┌─ Tab 1: claude ─┬─ Tab 2: nvim ─┬─ Tab 3: shell ─┐
+│                                                     │
+│               Active Tab Content                    │
+│                                                     │
+└─────────────────────────────────────────────────────┘
 ```
