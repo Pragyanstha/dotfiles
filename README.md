@@ -2,7 +2,7 @@
 
 Pragyan's dotfiles
 
-Terminal setup: Ghostty + Zellij + Neovim (LazyVim) + Claude Code + lazygit + Starship
+Terminal setup: Ghostty + tmux + Neovim (LazyVim) + Claude Code + lazygit + Starship
 
 ## Quick Install
 
@@ -24,7 +24,7 @@ curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/dotfiles/main/install
 
 | Tool | Purpose |
 |------|---------|
-| **Zellij** | Terminal multiplexer (tabs, sessions) |
+| **tmux** | Terminal multiplexer (Tokyo Night theme, TPM) |
 | **Neovim + LazyVim** | Preconfigured editor (IDE-like) |
 | **Claude Code** | AI coding assistant in terminal |
 | **lazygit** | Terminal UI for git |
@@ -37,11 +37,12 @@ curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/dotfiles/main/install
 
 ## Key Shortcuts
 
-### Zellij (terminal multiplexer)
-- `Alt+t` — new tab
-- `Alt+w` — close tab
-- `Alt+h/l` — prev/next tab
-- `Alt+1-9` — jump to tab by number
+### tmux (terminal multiplexer)
+- `Ctrl+a` — prefix key
+- `prefix v` — split pane vertically
+- `prefix s` — split pane horizontally
+- `prefix H/J/K/L` — resize panes
+- `prefix r` — reload config
 
 ### LazyVim
 - `Space` — leader key (opens command menu)
@@ -61,15 +62,16 @@ curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/dotfiles/main/install
 - Shell: `zsh/.zshrc`
 - Prompt: `starship/starship.toml`
 - Terminal: `ghostty/config`
-- Multiplexer: `zellij/config.kdl`
+- tmux: `.tmux.conf`
 - Neovim: `nvim/lua/plugins/` (add LazyVim plugin specs)
 
-## Layout
+## tmux Plugins
 
-```
-┌─ Tab 1: claude ─┬─ Tab 2: nvim ─┬─ Tab 3: shell ─┐
-│                                                     │
-│               Active Tab Content                    │
-│                                                     │
-└─────────────────────────────────────────────────────┘
-```
+| Plugin | Purpose |
+|--------|---------|
+| **tpm** | Plugin manager |
+| **tmux-sensible** | Sensible defaults |
+| **tmux-pain-control** | Pane navigation bindings |
+| **tmux-yank** | Clipboard copy support |
+| **tmux-copycat** | Regex search in scrollback |
+| **tokyo-night-tmux** | Tokyo Night Storm theme |
