@@ -373,6 +373,10 @@ link_dotfiles() {
     # tmux
     ln -sf "$DOTFILES_DIR/.tmux.conf" "$HOME/.tmux.conf"
 
+    # claude code
+    mkdir -p "$HOME/.claude"
+    ln -sf "$DOTFILES_DIR/claude/settings.json" "$HOME/.claude/settings.json"
+
     ok "Dotfiles linked"
 }
 
