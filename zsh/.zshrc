@@ -22,6 +22,9 @@ alias ll="eza -la --icons"
 alias cat="bat"
 alias vim="nvim"
 alias lg="lazygit"
+alias tx="tmux"
+alias txa="tmux attach -t"
+alias txn="tmux new -s"
 alias c="clear"
 alias cc="claude"
 alias sr="sshr"
@@ -73,3 +76,4 @@ sshr() {
 if [[ -f "$HOME/.local/state/ssh_target" ]]; then
   printf "\033[2mSSH: %s — type 'sshr' to reconnect\033[0m\n" "$(cat "$HOME/.local/state/ssh_target")"
 fi
+
