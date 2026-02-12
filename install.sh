@@ -344,12 +344,12 @@ main() {
     install_lazyvim
     install_lazygit
     install_tmux
-    install_tpm
     install_starship
     install_modern_tools
     install_zsh_plugins
     install_claude_code
     link_dotfiles
+    install_tpm
     set_default_shell
 
     echo ""
