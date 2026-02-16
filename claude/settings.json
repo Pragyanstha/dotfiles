@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "defaultMode": "default"
+  },
+  "env": {
+    "ENABLE_BACKGROUND_TASKS": "1"
+  }
+}
