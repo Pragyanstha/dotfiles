@@ -1,6 +1,6 @@
 # Dotfiles
 
-Pragyan's dotfiles
+Pragyan's dotfiles - personal development environment configuration
 
 Terminal setup: Ghostty + tmux + Neovim (LazyVim) + Claude Code + lazygit + Starship
 
@@ -27,6 +27,7 @@ curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/dotfiles/main/install
 | **tmux** | Terminal multiplexer (Tokyo Night theme, TPM) |
 | **Neovim + LazyVim** | Preconfigured editor (IDE-like) |
 | **Claude Code** | AI coding assistant in terminal |
+| **claudecode.nvim** | Neovim MCP bridge for Claude Code |
 | **lazygit** | Terminal UI for git |
 | **Starship** | Minimal, fast prompt |
 | **eza** | Better `ls` with icons |
@@ -44,6 +45,9 @@ curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/dotfiles/main/install
 - `prefix H/J/K/L` — resize panes
 - `prefix r` — reload config
 
+### Neovim Window Navigation
+- `Ctrl+h/j/k/l` — move between windows (works from terminal mode too)
+
 ### LazyVim
 - `Space` — leader key (opens command menu)
 - `Space gg` — lazygit
@@ -56,6 +60,13 @@ curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/dotfiles/main/install
 - `/config` — settings
 - `/clear` — clear context
 - `Escape` — stop Claude
+
+### Claude Code Neovim Plugin (claudecode.nvim)
+- `Space ac` — toggle Claude Code terminal
+- `Space ab` — add current buffer as context
+- `Space as` (visual) — send selection to Claude Code
+- `Space aa` — accept diff
+- `Space ad` — deny diff
 
 ## Customizing
 
