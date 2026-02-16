@@ -243,24 +243,87 @@ install_zsh_plugins() {
     ok "zsh plugins installed"
 }
 
-# ─── Install tmux ────────────────────────────────────────────
+# ─── Install tmux (from source for latest version) ──────────
 install_tmux() {
+    local TMUX_VERSION="3.6a"
+
     if command -v tmux &>/dev/null; then
-        ok "tmux already installed"
-        return
+        local current_ver
+        current_ver="$(tmux -V | awk '{print $2}')"
+        if [ "$current_ver" = "$TMUX_VERSION" ]; then
+            ok "tmux $TMUX_VERSION already installed"
+            return
+        fi
+        info "tmux $current_ver found, upgrading to $TMUX_VERSION..."
+    else
+        info "Installing tmux $TMUX_VERSION..."
     fi
 
-    info "Installing tmux..."
     case $OS in
         macos)
             # Already installed via Homebrew in check_prerequisites
+            return
             ;;
-        debian)  sudo apt-get install -y tmux ;;
-        fedora)  sudo dnf install -y tmux ;;
-        arch)    sudo pacman -S --noconfirm tmux ;;
-        alpine)  sudo apk add tmux ;;
     esac
-    ok "tmux installed"
+
+    # Build dependencies check
+    local missing_deps=()
+    for cmd in gcc make autoconf pkg-config; do
+        command -v "$cmd" &>/dev/null || missing_deps+=("$cmd")
+    done
+    if [ ${#missing_deps[@]} -gt 0 ]; then
+        warn "Missing build tools for tmux: ${missing_deps[*]}"
+        warn "Install them with your package manager, then re-run"
+        return
+    fi
+
+    local build_dir
+    build_dir="$(mktemp -d)"
+    trap "rm -rf '$build_dir'" RETURN
+
+    # Build libevent locally if not already present
+    if ! pkg-config --exists "libevent_core >= 2" 2>/dev/null && \
+       ! PKG_CONFIG_PATH="$HOME/.local/lib/pkgconfig" pkg-config --exists "libevent_core >= 2" 2>/dev/null; then
+        info "Building libevent..."
+        local LIBEVENT_VERSION="2.1.12-stable"
+        curl -Lso "$build_dir/libevent.tar.gz" \
+            "https://github.com/libevent/libevent/releases/download/release-${LIBEVENT_VERSION}/libevent-${LIBEVENT_VERSION}.tar.gz"
+        tar xf "$build_dir/libevent.tar.gz" -C "$build_dir"
+        (cd "$build_dir/libevent-${LIBEVENT_VERSION}" \
+            && ./configure --prefix="$HOME/.local" --disable-shared --quiet \
+            && make -j"$(nproc)" --quiet \
+            && make install --quiet) || { warn "libevent build failed"; return; }
+        ok "libevent built"
+    fi
+
+    # Build bison locally if not available
+    if ! command -v bison &>/dev/null && ! [ -x "$HOME/.local/bin/bison" ]; then
+        info "Building bison..."
+        local BISON_VERSION="3.8.2"
+        curl -Lso "$build_dir/bison.tar.gz" \
+            "https://ftp.gnu.org/gnu/bison/bison-${BISON_VERSION}.tar.gz"
+        tar xf "$build_dir/bison.tar.gz" -C "$build_dir"
+        (cd "$build_dir/bison-${BISON_VERSION}" \
+            && ./configure --prefix="$HOME/.local" --quiet \
+            && make -j"$(nproc)" --quiet \
+            && make install --quiet) || { warn "bison build failed"; return; }
+        ok "bison built"
+    fi
+
+    info "Building tmux $TMUX_VERSION..."
+    curl -Lso "$build_dir/tmux.tar.gz" \
+        "https://github.com/tmux/tmux/releases/download/${TMUX_VERSION}/tmux-${TMUX_VERSION}.tar.gz"
+    tar xf "$build_dir/tmux.tar.gz" -C "$build_dir"
+    (cd "$build_dir/tmux-${TMUX_VERSION}" \
+        && PATH="$HOME/.local/bin:$PATH" \
+           PKG_CONFIG_PATH="$HOME/.local/lib/pkgconfig" \
+           CFLAGS="-I$HOME/.local/include" \
+           LDFLAGS="-L$HOME/.local/lib -Wl,-rpath,$HOME/.local/lib" \
+           ./configure --prefix="$HOME/.local" --quiet \
+        && make -j"$(nproc)" --quiet \
+        && make install --quiet) || { warn "tmux build failed"; return; }
+
+    ok "tmux $TMUX_VERSION installed"
 }
 
 # ─── Install Claude Code ─────────────────────────────────────
@@ -310,6 +373,10 @@ link_dotfiles() {
     # tmux
     ln -sf "$DOTFILES_DIR/.tmux.conf" "$HOME/.tmux.conf"
 
+    # claude code
+    mkdir -p "$HOME/.claude"
+    ln -sf "$DOTFILES_DIR/claude/settings.json" "$HOME/.claude/settings.json"
+
     ok "Dotfiles linked"
 }
 
@@ -344,12 +411,12 @@ main() {
     install_lazyvim
     install_lazygit
     install_tmux
-    install_tpm
     install_starship
     install_modern_tools
     install_zsh_plugins
     install_claude_code
     link_dotfiles
+    install_tpm
     set_default_shell
 
     echo ""

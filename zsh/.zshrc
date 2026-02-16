@@ -19,6 +19,9 @@ source <(fzf --zsh 2>/dev/null) 2>/dev/null
 # ─── Aliases ──────────────────────────────────────
 alias ls="eza --icons"
 alias ll="eza -la --icons"
+autoload -Uz compinit && compinit
+setopt complete_aliases
+compdef _files ls ll
 alias cat="bat"
 alias vim="nvim"
 alias lg="lazygit"
