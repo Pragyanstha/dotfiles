@@ -9,7 +9,7 @@ Terminal setup: Ghostty + tmux + Neovim (LazyVim) + Claude Code + lazygit + Star
 **On a new machine (macOS or any Linux):**
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/dotfiles.git ~/dotfiles
+git clone https://github.com/Pragyanstha/dotfiles.git ~/dotfiles
 cd ~/dotfiles && bash install.sh
 exec zsh
 ```
@@ -17,7 +17,7 @@ exec zsh
 **One-liner for remote servers (no git clone needed):**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/dotfiles/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Pragyanstha/dotfiles/main/install.sh | bash
 ```
 
 ## What's Included
