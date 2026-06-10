@@ -1,8 +1,81 @@
 {
-  "permissions": {
-    "defaultMode": "default"
-  },
   "env": {
     "ENABLE_BACKGROUND_TASKS": "1"
-  }
+  },
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(yarn *)",
+      "Bash(pnpm *)",
+      "Bash(git status)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git branch *)",
+      "Bash(git checkout *)",
+      "Bash(git commit *)",
+      "Bash(git pull *)",
+      "Bash(git fetch *)",
+      "Bash(ls *)",
+      "Bash(which *)",
+      "Bash(echo *)",
+      "Bash(pwd)",
+      "Bash(date *)",
+      "Read(~/.zshrc)",
+      "Read(~/.bashrc)",
+      "Bash(xargs ls:*)",
+      "Bash(wc:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(uv run:*)",
+      "Bash(uv *)",
+      "Bash(git:*)",
+      "Bash(find:*)",
+      "Bash(head:*)",
+      "Bash(python3:*)",
+      "Bash(python:*)",
+      "Bash(chmod +x:*)",
+      "WebFetch(domain:arxiv.org)",
+      "WebSearch",
+      "Read",
+      "Bash",
+      "Glob",
+      "Write",
+      "Edit"
+    ],
+    "deny": [
+      "Bash(git add .)",
+      "Bash(git add -A)",
+      "Bash(git push -f *)",
+      "Bash(git reset --hard *)",
+      "Bash(npm publish *)",
+      "Bash(curl *)",
+      "Bash(wget *)",
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Edit(./.env)",
+      "Edit(./.env.*)",
+      "Read(~/.ssh/**)",
+      "Read(~/.aws/**)"
+    ],
+    "ask": [
+      "Bash(git push *)",
+      "Bash(rm *)",
+      "Bash(mv *)"
+    ],
+    "defaultMode": "bypassPermissions"
+  },
+  "sandbox": {
+    "enabled": false,
+    "autoAllowBashIfSandboxed": true,
+    "excludedCommands": [
+      "git",
+      "docker"
+    ]
+  },
+  "skipDangerousModePermissionPrompt": true,
+  "editorMode": "vim",
+  "remoteControlAtStartup": true,
+  "agentPushNotifEnabled": true,
+  "model": "claude-fable-5[1m]"
 }
