@@ -2,6 +2,14 @@
 export PATH="$HOME/.local/bin:$PATH"
 typeset -U path  # drop duplicate PATH entries
 
+# ─── Locale ───────────────────────────────────────
+# UTF-8 everywhere; servers without en_US.UTF-8 get C.UTF-8 (avoids locale warnings)
+if [[ "$OSTYPE" == darwin* ]] || locale -a 2>/dev/null | grep -qiE '^en_US\.utf-?8$'; then
+  export LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
+elif locale -a 2>/dev/null | grep -qiE '^c\.utf-?8$'; then
+  export LANG=C.UTF-8 LC_ALL=C.UTF-8
+fi
+
 # ─── History ──────────────────────────────────────
 HISTFILE=~/.zsh_history
 HISTSIZE=10000
