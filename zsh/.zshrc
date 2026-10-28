@@ -1,5 +1,6 @@
 # ─── Path ─────────────────────────────────────────
 export PATH="$HOME/.local/bin:$PATH"
+typeset -U path  # drop duplicate PATH entries
 
 # ─── History ──────────────────────────────────────
 HISTFILE=~/.zsh_history
@@ -7,23 +8,33 @@ HISTSIZE=10000
 SAVEHIST=10000
 setopt share_history hist_ignore_dups hist_ignore_space
 
+# ─── Completion ───────────────────────────────────
+autoload -Uz compinit && compinit -i
+
 # ─── Plugins ──────────────────────────────────────
-source "$HOME/.zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" 2>/dev/null
-source "$HOME/.zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh" 2>/dev/null
+for _plugin in zsh-syntax-highlighting zsh-autosuggestions; do
+  [[ -r "$HOME/.zsh/plugins/$_plugin/$_plugin.zsh" ]] && source "$HOME/.zsh/plugins/$_plugin/$_plugin.zsh"
+done
+unset _plugin
 
 # ─── Tools ────────────────────────────────────────
-eval "$(starship init zsh)"
-eval "$(zoxide init zsh)"
-source <(fzf --zsh 2>/dev/null) 2>/dev/null
+(( $+commands[starship] )) && eval "$(starship init zsh)"
+(( $+commands[zoxide] )) && eval "$(zoxide init zsh)"
+(( $+commands[fzf] )) && source <(fzf --zsh 2>/dev/null)
 
 # ─── Aliases ──────────────────────────────────────
-alias ls="eza --icons"
-alias ll="eza -la --icons"
-autoload -Uz compinit && compinit
-setopt complete_aliases
-compdef _files ls ll
-alias cat="bat"
-alias vim="nvim"
+# Only shadow standard commands when the replacement is installed.
+if (( $+commands[eza] )); then
+  alias ls="eza --icons"
+  alias ll="eza -la --icons"
+  alias tree="eza --tree --icons"
+  setopt complete_aliases
+  compdef _files ls ll
+else
+  alias ll="ls -la"
+fi
+(( $+commands[bat] )) && alias cat="bat"
+(( $+commands[nvim] )) && alias vim="nvim"
 alias lg="lazygit"
 alias tx="tmux"
 alias txa="tmux attach -t"
@@ -32,13 +43,12 @@ alias c="clear"
 alias cc="claude"
 alias sr="sshr"
 alias n="nvim"
+alias hr="herdr"
+alias hrc="herdr --remote pragyan@chelsea"
 
 # Navigation
 alias ..="cd .."
 alias ...="cd ../.."
-
-# Tree view
-alias tree="eza --tree --icons"
 
 # Git
 alias gs="git status"
@@ -51,7 +61,9 @@ alias gd="git diff"
 # Utilities
 alias mk="mkdir -p"
 alias ports="lsof -i -P -n | grep LISTEN"
-alias ip="curl -s ifconfig.me"
+alias myip="curl -s ifconfig.me"
+# On Linux, `ip` is the network tool, so only alias it on macOS.
+[[ "$OSTYPE" == darwin* ]] && alias ip="curl -s ifconfig.me"
 
 # ─── SSH Pane Reconnect ──────────────────────────
 mkdir -p "$HOME/.local/state"
@@ -80,3 +92,27 @@ if [[ -f "$HOME/.local/state/ssh_target" ]]; then
   printf "\033[2mSSH: %s — type 'sshr' to reconnect\033[0m\n" "$(cat "$HOME/.local/state/ssh_target")"
 fi
 
+# Auto-heal leaked xterm mouse-tracking modes on every prompt
+_reset_mouse_modes() {
+  printf '\e[?1000l\e[?1002l\e[?1003l\e[?1006l'
+}
+autoload -Uz add-zsh-hook
+add-zsh-hook precmd _reset_mouse_modes
+
+# ─── Optional, machine-specific ──────────────────
+# Google Cloud SDK (Homebrew)
+[[ -r /opt/homebrew/share/google-cloud-sdk/path.zsh.inc ]] && source /opt/homebrew/share/google-cloud-sdk/path.zsh.inc
+[[ -r /opt/homebrew/share/google-cloud-sdk/completion.zsh.inc ]] && source /opt/homebrew/share/google-cloud-sdk/completion.zsh.inc
+
+# nvm
+export NVM_DIR="$HOME/.nvm"
+[[ -s "$NVM_DIR/nvm.sh" ]] && source "$NVM_DIR/nvm.sh"
+[[ -s "$NVM_DIR/bash_completion" ]] && source "$NVM_DIR/bash_completion"
+
+# Unity CLI
+[[ -r "$HOME/.unity/env" ]] && source "$HOME/.unity/env"
+
+# Per-machine extras that shouldn't live in the repo
+[[ -r "$HOME/.zshrc.local" ]] && source "$HOME/.zshrc.local"
+
+true  # don't start the shell with a failed status from the last check
